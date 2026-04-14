@@ -1,341 +1,456 @@
-/**
- * script.js completo mejorado:
- * - Agregar productos
- * - Quitar 1 unidad
- * - Sumar desde carrito
- * - Eliminar producto completo
- * - Actualiza total
- */
+/* =========================================================
+   RUSHEATS — CSS MODERNO / PREMIUM / LLAMATIVO
+   PÉGALO AL FINAL DE TU styles.css
+   ========================================================= */
 
-(function () {
-  'use strict';
+/* =========================
+   PALETA MODERNA
+   ========================= */
+:root {
+  --bg-main: #eef4ff;
+  --bg-soft: #f8fbff;
+  --surface: rgba(255,255,255,.82);
+  --surface-strong: #ffffff;
+  --text-main: #0f172a;
+  --text-soft: #64748b;
+  --green: #22c55e;
+  --green-dark: #16a34a;
+  --blue: #3b82f6;
+  --blue-dark: #2563eb;
+  --orange: #f97316;
+  --orange-dark: #ea580c;
+  --red: #ef4444;
+  --red-dark: #dc2626;
+  --border: rgba(255,255,255,.35);
+}
 
-  var RESTAURANTES = [
-    { id: 'r1', nombre: 'Pizzería Napoli', categoria: 'pizza', img: './assets/rest-r1.svg' },
-    { id: 'r2', nombre: 'Sushi Roll', categoria: 'asiatica', img: './assets/rest-r2.svg' },
-    { id: 'r3', nombre: 'Burger Norte', categoria: 'hamburguesas', img: './assets/rest-r3.svg' },
-    { id: 'r4', nombre: 'Mamma Mia Express', categoria: 'pizza', img: './assets/rest-r4.svg' }
-  ];
+/* =========================
+   FONDO GENERAL
+   ========================= */
+body {
+  background:
+    radial-gradient(circle at top left, #dbeafe 0%, transparent 30%),
+    radial-gradient(circle at top right, #dcfce7 0%, transparent 30%),
+    linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%);
+  min-height: 100vh;
+  color: var(--text-main);
+}
 
-  var MENU = {
-    r1: [
-      { id: 'm1', nombre: 'Margarita', precio: 8.5, img: './assets/dish-m1.svg' },
-      { id: 'm2', nombre: 'Cuatro quesos', precio: 10.9, img: './assets/dish-m2.svg' }
-    ],
-    r2: [
-      { id: 'm3', nombre: 'Menú maki (12 pzs)', precio: 14.0, img: './assets/dish-m3.svg' },
-      { id: 'm4', nombre: 'Yakisoba', precio: 9.5, img: './assets/dish-m4.svg' }
-    ],
-    r3: [
-      { id: 'm5', nombre: 'Clásica + patatas', precio: 11.0, img: './assets/dish-m5.svg' },
-      { id: 'm6', nombre: 'Veggie', precio: 10.5, img: './assets/dish-m6.svg' }
-    ],
-    r4: [
-      { id: 'm7', nombre: 'Calzone', precio: 9.0, img: './assets/dish-m7.svg' },
-      { id: 'm8', nombre: 'Prosciutto', precio: 11.5, img: './assets/dish-m8.svg' }
-    ]
-  };
+/* =========================
+   HEADER PREMIUM
+   ========================= */
+.header {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  border: none;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.25);
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
 
-  var restauranteActual = null;
-  var pedido = [];
+.header-top {
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+}
 
-  var elFiltro = document.getElementById('filtro-cat');
-  var elListaRest = document.getElementById('lista-restaurantes');
-  var elStepRest = document.getElementById('step-restaurante');
-  var elStepProd = document.getElementById('step-productos');
-  var elStepRes = document.getElementById('step-resumen');
-  var elStepConf = document.getElementById('step-confirmacion');
-  var elTituloRest = document.getElementById('titulo-restaurante');
-  var elListaPlatos = document.getElementById('lista-platos');
-  var elListaResumen = document.getElementById('lista-resumen');
-  var elResumenVacio = document.getElementById('resumen-vacio');
-  var elTotal = document.getElementById('total-delivery');
-  var elMsgConfirm = document.getElementById('msg-confirm');
+.header-logo {
+  width: 58px;
+  height: 58px;
+  padding: 8px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.08);
+}
 
-  function mostrarSoloPanel(panel) {
-    var panels = [elStepRest, elStepProd, elStepRes, elStepConf];
+.header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
 
-    for (var i = 0; i < panels.length; i++) {
-      var activo = panels[i] === panel;
-      panels[i].classList.toggle('active', activo);
-      panels[i].hidden = !activo;
-    }
+/* =========================
+   STEPS
+   ========================= */
+.steps {
+  justify-content: center;
+  gap: .8rem;
+  margin-top: 1rem;
+}
 
-    actualizarIndicadoresPasos(panel);
+.step {
+  padding: .7rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(8px);
+}
+
+.step.active {
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  box-shadow: 0 8px 18px rgba(34,197,94,.35);
+}
+
+/* =========================
+   CONTENEDOR
+   ========================= */
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* =========================
+   HERO
+   ========================= */
+.hero {
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff, #eff6ff);
+  border-radius: 30px;
+  padding: 2.6rem 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 18px 40px rgba(0,0,0,.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  top: -70px;
+  right: -40px;
+  background: rgba(59,130,246,.10);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  bottom: -60px;
+  left: -40px;
+  background: rgba(34,197,94,.12);
+}
+
+.hero h2 {
+  font-size: 2.3rem;
+  font-weight: 800;
+  margin-bottom: .7rem;
+  position: relative;
+  z-index: 2;
+}
+
+.hero .muted {
+  max-width: 650px;
+  margin: auto;
+  line-height: 1.7;
+  position: relative;
+  z-index: 2;
+}
+
+/* =========================
+   FILTRO
+   ========================= */
+.filtros {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.filtros select {
+  width: 100%;
+  max-width: 340px;
+  padding: 1rem 1.2rem;
+  border-radius: 18px;
+  border: 1px solid #dbeafe;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0,0,0,.05);
+}
+
+/* =========================
+   GRID RESTAURANTES
+   ========================= */
+.lista-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.card-rest {
+  background: linear-gradient(180deg, #fff, #f8fbff);
+  border: 1px solid #e2e8f0;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 14px 28px rgba(0,0,0,.07);
+  transition: all .25s ease;
+}
+
+.card-rest:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 34px rgba(0,0,0,.12);
+}
+
+.card-rest__media img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  filter: saturate(1.15);
+}
+
+.card-rest__body {
+  padding: 1.2rem;
+  text-align: center;
+}
+
+.card-rest strong {
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.tag {
+  display: inline-block;
+  margin-top: .7rem;
+  padding: .45rem .9rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #15803d;
+  font-weight: 700;
+}
+
+/* =========================
+   MENU
+   ========================= */
+.lista-platos {
+  max-width: 760px;
+  margin: auto;
+}
+
+.plato-row {
+  background: linear-gradient(180deg, #fff, #f8fbff);
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  margin-bottom: 1rem;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 8px 18px rgba(0,0,0,.05);
+}
+
+.plato-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+}
+
+/* =========================
+   BOTONES MODERNOS
+   ========================= */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+  border: none;
+  border-radius: 18px;
+  font-weight: 800;
+  padding: 1rem 1.8rem;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  box-shadow: 0 12px 22px rgba(34,197,94,.28);
+  transition: all .25s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+}
+
+.btn-mini {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+  box-shadow: 0 10px 18px rgba(34,197,94,.3);
+  font-size: 1.3rem;
+  transition: all .2s ease;
+}
+
+.btn-mini:hover {
+  transform: scale(1.08);
+}
+
+.btn-ghost-small,
+.link-back {
+  border-radius: 16px;
+  font-weight: 700;
+}
+
+/* =========================
+   CARRITO MODERNO
+   ========================= */
+.lista-resumen {
+  max-width: 760px;
+  margin: auto;
+}
+
+.resumen-line {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  backdrop-filter: blur(12px);
+  border-radius: 22px;
+  padding: .85rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 10px 22px rgba(0,0,0,.06);
+}
+
+.resumen-thumb {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.resumen-info {
+  flex: 1;
+}
+
+.resumen-nombre {
+  font-weight: 800;
+}
+
+.resumen-unitario {
+  font-size: .82rem;
+  color: var(--text-soft);
+}
+
+.resumen-controles {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  padding: 6px;
+}
+
+.cantidad-num {
+  font-weight: 800;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* botones carrito */
+.btn-cantidad {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  color: white;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.btn-restar {
+  background: linear-gradient(135deg, var(--orange), var(--orange-dark));
+}
+
+.btn-sumar {
+  background: linear-gradient(135deg, var(--green), var(--green-dark));
+}
+
+.btn-borrar {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.resumen-precio {
+  font-weight: 800;
+  color: var(--green-dark);
+}
+
+/* =========================
+   TOTAL
+   ========================= */
+.total-line {
+  max-width: 760px;
+  margin: 1.5rem auto 0;
+  padding: 1rem 1.2rem;
+  background: rgba(255,255,255,.7);
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  font-size: 1.2rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,.05);
+}
+
+/* =========================
+   CONFIRMACION
+   ========================= */
+.panel-center {
+  text-align: center;
+}
+
+.confirm-card {
+  max-width: 500px;
+  margin: auto;
+  background: linear-gradient(180deg, #fff, #f8fbff);
+  border-radius: 28px;
+  padding: 2.5rem;
+  box-shadow: 0 18px 38px rgba(0,0,0,.08);
+}
+
+/* =========================
+   ANIMACIONES
+   ========================= */
+.panel.active {
+  animation: fadeUp .35s ease;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+@media (max-width: 768px) {
+  .hero h2 {
+    font-size: 1.8rem;
   }
 
-  function actualizarIndicadoresPasos(panel) {
-    var n = '1';
-
-    if (panel === elStepProd) n = '2';
-    if (panel === elStepRes || panel === elStepConf) n = '3';
-
-    var indicadores = document.querySelectorAll('[data-step-indicator]');
-
-    for (var i = 0; i < indicadores.length; i++) {
-      var el = indicadores[i];
-      el.classList.toggle('active', el.getAttribute('data-step-indicator') === n);
-    }
+  .resumen-line {
+    flex-direction: column;
+    text-align: center;
   }
 
-  function escapeHtml(s) {
-    var d = document.createElement('div');
-    d.textContent = s;
-    return d.innerHTML;
+  .resumen-info {
+    width: 100%;
   }
 
-  function escapeAttr(s) {
-    return String(s).replace(/"/g, '&quot;');
+  .resumen-precio {
+    width: 100%;
+    text-align: center;
   }
 
-  function formatEuros(n) {
-    return Number(n).toFixed(2).replace('.', ',') + ' €';
+  .actions {
+    flex-direction: column;
   }
 
-  function filtrarRestaurantes() {
-    var cat = elFiltro.value;
-    elListaRest.innerHTML = '';
-
-    for (var i = 0; i < RESTAURANTES.length; i++) {
-      var r = RESTAURANTES[i];
-
-      if (cat !== 'todas' && r.categoria !== cat) continue;
-
-      var li = document.createElement('li');
-
-      li.innerHTML =
-        '<button type="button" class="card-rest" data-rest="' + r.id + '">' +
-          '<span class="card-rest__media">' +
-            '<img src="' + r.img + '" alt="">' +
-          '</span>' +
-          '<span class="card-rest__body">' +
-            '<strong>' + escapeHtml(r.nombre) + '</strong>' +
-            '<span class="tag">' + escapeHtml(r.categoria) + '</span>' +
-          '</span>' +
-        '</button>';
-
-      elListaRest.appendChild(li);
-    }
+  .btn-primary,
+  .btn-ghost-small {
+    width: 100%;
   }
-
-  function abrirMenu(restId) {
-    restauranteActual = restId;
-    elListaPlatos.innerHTML = '';
-
-    for (var i = 0; i < RESTAURANTES.length; i++) {
-      if (RESTAURANTES[i].id === restId) {
-        elTituloRest.textContent = RESTAURANTES[i].nombre;
-        break;
-      }
-    }
-
-    var platos = MENU[restId] || [];
-
-    for (var j = 0; j < platos.length; j++) {
-      var pl = platos[j];
-      var li = document.createElement('li');
-
-      li.className = 'plato-row';
-
-      li.innerHTML =
-        '<img class="plato-thumb" src="' + pl.img + '" alt="">' +
-        '<div class="plato-info">' +
-          '<span class="plato-nombre">' + escapeHtml(pl.nombre) + '</span>' +
-        '</div>' +
-        '<span class="plato-precio">' + formatEuros(pl.precio) + '</span>' +
-        '<button type="button" class="btn-mini"' +
-          ' data-add-plato="' + pl.id + '"' +
-          ' data-nombre="' + escapeAttr(pl.nombre) + '"' +
-          ' data-precio="' + pl.precio + '"' +
-          ' data-img="' + escapeAttr(pl.img) + '"' +
-        '>+</button>';
-
-      elListaPlatos.appendChild(li);
-    }
-
-    mostrarSoloPanel(elStepProd);
-  }
-
-  function lineaPedido(idPlato) {
-    for (var i = 0; i < pedido.length; i++) {
-      if (pedido[i].idPlato === idPlato) return pedido[i];
-    }
-    return null;
-  }
-
-  function agregarPlato(idPlato, nombre, precio, img) {
-    var linea = lineaPedido(idPlato);
-
-    if (linea) {
-      linea.cantidad += 1;
-    } else {
-      pedido.push({
-        idPlato: idPlato,
-        nombre: nombre,
-        precioUnit: precio,
-        cantidad: 1,
-        img: img
-      });
-    }
-  }
-
-  function quitarPlato(idPlato) {
-    for (var i = 0; i < pedido.length; i++) {
-      if (pedido[i].idPlato === idPlato) {
-        pedido[i].cantidad--;
-
-        if (pedido[i].cantidad <= 0) {
-          pedido.splice(i, 1);
-        }
-        break;
-      }
-    }
-  }
-
-  function eliminarPlatoCompleto(idPlato) {
-    for (var i = 0; i < pedido.length; i++) {
-      if (pedido[i].idPlato === idPlato) {
-        pedido.splice(i, 1);
-        break;
-      }
-    }
-  }
-
-  function totalPedido() {
-    var total = 0;
-
-    for (var i = 0; i < pedido.length; i++) {
-      total += pedido[i].precioUnit * pedido[i].cantidad;
-    }
-
-    return total;
-  }
-
-  function pintarResumen() {
-    elListaResumen.innerHTML = '';
-
-    elResumenVacio.hidden = pedido.length > 0;
-
-    for (var i = 0; i < pedido.length; i++) {
-      var l = pedido[i];
-      var li = document.createElement('li');
-
-      li.className = 'resumen-line';
-
-      li.innerHTML =
-        '<img class="resumen-thumb" src="' + l.img + '" alt="">' +
-
-        '<div class="resumen-info">' +
-          '<span class="resumen-nombre">' + escapeHtml(l.nombre) + '</span>' +
-          '<small class="resumen-unitario">' + formatEuros(l.precioUnit) + ' c/u</small>' +
-        '</div>' +
-
-        '<div class="resumen-controles">' +
-          '<button class="btn-cantidad btn-restar" data-remove-plato="' + l.idPlato + '">−</button>' +
-          '<span class="cantidad-num">' + l.cantidad + '</span>' +
-          '<button class="btn-cantidad btn-sumar"' +
-            ' data-add-resumen="' + l.idPlato + '"' +
-            ' data-nombre="' + escapeAttr(l.nombre) + '"' +
-            ' data-precio="' + l.precioUnit + '"' +
-            ' data-img="' + escapeAttr(l.img) + '"' +
-          '>+</button>' +
-        '</div>' +
-
-        '<span class="resumen-precio">' +
-          formatEuros(l.precioUnit * l.cantidad) +
-        '</span>' +
-
-        '<button class="btn-borrar" data-delete-plato="' + l.idPlato + '">✕</button>';
-
-      elListaResumen.appendChild(li);
-    }
-
-    elTotal.textContent = formatEuros(totalPedido());
-  }
-
-  elListaRest.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-rest]');
-    if (!btn) return;
-
-    abrirMenu(btn.getAttribute('data-rest'));
-  });
-
-  elFiltro.addEventListener('change', filtrarRestaurantes);
-
-  elListaPlatos.addEventListener('click', function (e) {
-    var btn = e.target.closest('[data-add-plato]');
-    if (!btn) return;
-
-    agregarPlato(
-      btn.getAttribute('data-add-plato'),
-      btn.getAttribute('data-nombre'),
-      parseFloat(btn.getAttribute('data-precio')),
-      btn.getAttribute('data-img')
-    );
-  });
-
-  elListaResumen.addEventListener('click', function (e) {
-    var btnRestar = e.target.closest('[data-remove-plato]');
-    var btnSumar = e.target.closest('[data-add-resumen]');
-    var btnEliminar = e.target.closest('[data-delete-plato]');
-
-    if (btnRestar) {
-      quitarPlato(btnRestar.getAttribute('data-remove-plato'));
-      pintarResumen();
-      return;
-    }
-
-    if (btnSumar) {
-      agregarPlato(
-        btnSumar.getAttribute('data-add-resumen'),
-        btnSumar.getAttribute('data-nombre'),
-        parseFloat(btnSumar.getAttribute('data-precio')),
-        btnSumar.getAttribute('data-img')
-      );
-
-      pintarResumen();
-      return;
-    }
-
-    if (btnEliminar) {
-      eliminarPlatoCompleto(btnEliminar.getAttribute('data-delete-plato'));
-      pintarResumen();
-    }
-  });
-
-  document.getElementById('btn-volver-rest').addEventListener('click', function () {
-    mostrarSoloPanel(elStepRest);
-  });
-
-  document.getElementById('btn-carrito').addEventListener('click', function () {
-    pintarResumen();
-    mostrarSoloPanel(elStepRes);
-  });
-
-  document.getElementById('btn-seguir-comprando').addEventListener('click', function () {
-    if (restauranteActual) abrirMenu(restauranteActual);
-  });
-
-  document.getElementById('btn-comprar').addEventListener('click', function () {
-    if (pedido.length === 0) {
-      alert('Añade al menos un producto.');
-      return;
-    }
-
-    elMsgConfirm.textContent =
-      'Tu pedido ha sido enviado por ' +
-      formatEuros(totalPedido()) +
-      '. Tiempo estimado: 35 minutos.';
-
-    pedido = [];
-    pintarResumen();
-    mostrarSoloPanel(elStepConf);
-  });
-
-  document.getElementById('btn-nuevo').addEventListener('click', function () {
-    restauranteActual = null;
-    mostrarSoloPanel(elStepRest);
-  });
-
-  filtrarRestaurantes();
-})();
+}
