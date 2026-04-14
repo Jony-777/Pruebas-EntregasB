@@ -1,6 +1,10 @@
 /**
- * prototipo-delivery-b/script.js — Variante B (A/B)
- * Misma lógica que delivery base; UI diferenciada por styles-ab-b.css + HTML.
+ * script.js completo mejorado:
+ * - Agregar productos
+ * - Quitar 1 unidad
+ * - Sumar desde carrito
+ * - Eliminar producto completo
+ * - Actualiza total
  */
 
 (function () {
@@ -13,7 +17,6 @@
     { id: 'r4', nombre: 'Mamma Mia Express', categoria: 'pizza', img: './assets/rest-r4.svg' }
   ];
 
-  /** Platos por restaurante (cada uno con imagen en ./assets/) */
   var MENU = {
     r1: [
       { id: 'm1', nombre: 'Margarita', precio: 8.5, img: './assets/dish-m1.svg' },
@@ -34,7 +37,6 @@
   };
 
   var restauranteActual = null;
-  /** pedido: { idPlato, nombre, precioUnit, cantidad } */
   var pedido = [];
 
   var elFiltro = document.getElementById('filtro-cat');
@@ -52,52 +54,27 @@
 
   function mostrarSoloPanel(panel) {
     var panels = [elStepRest, elStepProd, elStepRes, elStepConf];
+
     for (var i = 0; i < panels.length; i++) {
-      var p = panels[i];
-      var on = p === panel;
-      p.classList.toggle('active', on);
-      p.hidden = !on;
+      var activo = panels[i] === panel;
+      panels[i].classList.toggle('active', activo);
+      panels[i].hidden = !activo;
     }
+
     actualizarIndicadoresPasos(panel);
   }
 
   function actualizarIndicadoresPasos(panel) {
-    var n = '0';
-    if (panel === elStepRest) n = '1';
+    var n = '1';
+
     if (panel === elStepProd) n = '2';
-    if (panel === elStepRes) n = '3';
-    if (panel === elStepConf) n = '3';
+    if (panel === elStepRes || panel === elStepConf) n = '3';
 
     var indicadores = document.querySelectorAll('[data-step-indicator]');
+
     for (var i = 0; i < indicadores.length; i++) {
       var el = indicadores[i];
-      var step = el.getAttribute('data-step-indicator');
-      el.classList.toggle('active', step === n || (panel === elStepConf && step === '3'));
-    }
-  }
-
-  function filtrarRestaurantes() {
-    var cat = elFiltro.value;
-    elListaRest.innerHTML = '';
-    for (var i = 0; i < RESTAURANTES.length; i++) {
-      var r = RESTAURANTES[i];
-      if (cat !== 'todas' && r.categoria !== cat) continue;
-      var li = document.createElement('li');
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'card-rest';
-      btn.setAttribute('data-rest', r.id);
-      btn.innerHTML =
-        '<span class="card-rest__media"><img src="' +
-        r.img +
-        '" width="72" height="72" alt="" loading="lazy"></span>' +
-        '<span class="card-rest__body"><strong>' +
-        escapeHtml(r.nombre) +
-        '</strong><span class="tag">' +
-        escapeHtml(r.categoria) +
-        '</span></span>';
-      li.appendChild(btn);
-      elListaRest.appendChild(li);
+      el.classList.toggle('active', el.getAttribute('data-step-indicator') === n);
     }
   }
 
@@ -107,48 +84,76 @@
     return d.innerHTML;
   }
 
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;');
+  }
+
+  function formatEuros(n) {
+    return Number(n).toFixed(2).replace('.', ',') + ' €';
+  }
+
+  function filtrarRestaurantes() {
+    var cat = elFiltro.value;
+    elListaRest.innerHTML = '';
+
+    for (var i = 0; i < RESTAURANTES.length; i++) {
+      var r = RESTAURANTES[i];
+
+      if (cat !== 'todas' && r.categoria !== cat) continue;
+
+      var li = document.createElement('li');
+
+      li.innerHTML =
+        '<button type="button" class="card-rest" data-rest="' + r.id + '">' +
+          '<span class="card-rest__media">' +
+            '<img src="' + r.img + '" alt="">' +
+          '</span>' +
+          '<span class="card-rest__body">' +
+            '<strong>' + escapeHtml(r.nombre) + '</strong>' +
+            '<span class="tag">' + escapeHtml(r.categoria) + '</span>' +
+          '</span>' +
+        '</button>';
+
+      elListaRest.appendChild(li);
+    }
+  }
+
   function abrirMenu(restId) {
     restauranteActual = restId;
-    var r = null;
+    elListaPlatos.innerHTML = '';
+
     for (var i = 0; i < RESTAURANTES.length; i++) {
       if (RESTAURANTES[i].id === restId) {
-        r = RESTAURANTES[i];
+        elTituloRest.textContent = RESTAURANTES[i].nombre;
         break;
       }
     }
-    elTituloRest.textContent = r ? r.nombre : 'Menú';
+
     var platos = MENU[restId] || [];
-    elListaPlatos.innerHTML = '';
+
     for (var j = 0; j < platos.length; j++) {
       var pl = platos[j];
       var li = document.createElement('li');
+
       li.className = 'plato-row';
+
       li.innerHTML =
-        '<img class="plato-thumb" src="' +
-        pl.img +
-        '" width="52" height="52" alt="">' +
-        '<div class="plato-info"><span class="plato-nombre">' +
-        escapeHtml(pl.nombre) +
-        '</span></div>' +
-        '<span class="plato-precio">' +
-        formatEuros(pl.precio) +
-        '</span>' +
-        '<button type="button" class="btn-mini" data-add-plato="' +
-        pl.id +
-        '" data-nombre="' +
-        escapeAttr(pl.nombre) +
-        '" data-precio="' +
-        pl.precio +
-        '" data-img="' +
-        escapeAttr(pl.img) +
-        '">+</button>';
+        '<img class="plato-thumb" src="' + pl.img + '" alt="">' +
+        '<div class="plato-info">' +
+          '<span class="plato-nombre">' + escapeHtml(pl.nombre) + '</span>' +
+        '</div>' +
+        '<span class="plato-precio">' + formatEuros(pl.precio) + '</span>' +
+        '<button type="button" class="btn-mini"' +
+          ' data-add-plato="' + pl.id + '"' +
+          ' data-nombre="' + escapeAttr(pl.nombre) + '"' +
+          ' data-precio="' + pl.precio + '"' +
+          ' data-img="' + escapeAttr(pl.img) + '"' +
+        '>+</button>';
+
       elListaPlatos.appendChild(li);
     }
-    mostrarSoloPanel(elStepProd);
-  }
 
-  function escapeAttr(s) {
-    return String(s).replace(/"/g, '&quot;');
+    mostrarSoloPanel(elStepProd);
   }
 
   function lineaPedido(idPlato) {
@@ -160,6 +165,7 @@
 
   function agregarPlato(idPlato, nombre, precio, img) {
     var linea = lineaPedido(idPlato);
+
     if (linea) {
       linea.cantidad += 1;
     } else {
@@ -173,61 +179,128 @@
     }
   }
 
-  function totalPedido() {
-    var t = 0;
+  function quitarPlato(idPlato) {
     for (var i = 0; i < pedido.length; i++) {
-      t += pedido[i].precioUnit * pedido[i].cantidad;
+      if (pedido[i].idPlato === idPlato) {
+        pedido[i].cantidad--;
+
+        if (pedido[i].cantidad <= 0) {
+          pedido.splice(i, 1);
+        }
+        break;
+      }
     }
-    return t;
   }
 
-  function formatEuros(n) {
-    return Number(n).toFixed(2).replace('.', ',') + ' €';
+  function eliminarPlatoCompleto(idPlato) {
+    for (var i = 0; i < pedido.length; i++) {
+      if (pedido[i].idPlato === idPlato) {
+        pedido.splice(i, 1);
+        break;
+      }
+    }
+  }
+
+  function totalPedido() {
+    var total = 0;
+
+    for (var i = 0; i < pedido.length; i++) {
+      total += pedido[i].precioUnit * pedido[i].cantidad;
+    }
+
+    return total;
   }
 
   function pintarResumen() {
     elListaResumen.innerHTML = '';
-    if (pedido.length === 0) {
-      elResumenVacio.hidden = false;
-    } else {
-      elResumenVacio.hidden = true;
-    }
+
+    elResumenVacio.hidden = pedido.length > 0;
+
     for (var i = 0; i < pedido.length; i++) {
       var l = pedido[i];
       var li = document.createElement('li');
+
       li.className = 'resumen-line';
+
       li.innerHTML =
-        '<img class="resumen-thumb" src="' +
-        l.img +
-        '" width="40" height="40" alt="">' +
-        '<span class="resumen-nombre">' +
-        escapeHtml(l.nombre) +
-        ' × ' +
-        l.cantidad +
-        '</span><span class="resumen-precio">' +
-        formatEuros(l.precioUnit * l.cantidad) +
-        '</span>';
+        '<img class="resumen-thumb" src="' + l.img + '" alt="">' +
+
+        '<div class="resumen-info">' +
+          '<span class="resumen-nombre">' + escapeHtml(l.nombre) + '</span>' +
+          '<small class="resumen-unitario">' + formatEuros(l.precioUnit) + ' c/u</small>' +
+        '</div>' +
+
+        '<div class="resumen-controles">' +
+          '<button class="btn-cantidad btn-restar" data-remove-plato="' + l.idPlato + '">−</button>' +
+          '<span class="cantidad-num">' + l.cantidad + '</span>' +
+          '<button class="btn-cantidad btn-sumar"' +
+            ' data-add-resumen="' + l.idPlato + '"' +
+            ' data-nombre="' + escapeAttr(l.nombre) + '"' +
+            ' data-precio="' + l.precioUnit + '"' +
+            ' data-img="' + escapeAttr(l.img) + '"' +
+          '>+</button>' +
+        '</div>' +
+
+        '<span class="resumen-precio">' +
+          formatEuros(l.precioUnit * l.cantidad) +
+        '</span>' +
+
+        '<button class="btn-borrar" data-delete-plato="' + l.idPlato + '">✕</button>';
+
       elListaResumen.appendChild(li);
     }
+
     elTotal.textContent = formatEuros(totalPedido());
   }
 
   elListaRest.addEventListener('click', function (e) {
     var btn = e.target.closest('[data-rest]');
     if (!btn) return;
+
     abrirMenu(btn.getAttribute('data-rest'));
   });
 
   elFiltro.addEventListener('change', filtrarRestaurantes);
 
   elListaPlatos.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-add-plato]');
-    if (!b) return;
-    var id = b.getAttribute('data-add-plato');
-    var nombre = b.getAttribute('data-nombre');
-    var precio = parseFloat(b.getAttribute('data-precio'), 10);
-    var imgPlato = b.getAttribute('data-img') || '';
-    agregarPlato(id, nombre, precio, imgPlato);
+    var btn = e.target.closest('[data-add-plato]');
+    if (!btn) return;
+
+    agregarPlato(
+      btn.getAttribute('data-add-plato'),
+      btn.getAttribute('data-nombre'),
+      parseFloat(btn.getAttribute('data-precio')),
+      btn.getAttribute('data-img')
+    );
+  });
+
+  elListaResumen.addEventListener('click', function (e) {
+    var btnRestar = e.target.closest('[data-remove-plato]');
+    var btnSumar = e.target.closest('[data-add-resumen]');
+    var btnEliminar = e.target.closest('[data-delete-plato]');
+
+    if (btnRestar) {
+      quitarPlato(btnRestar.getAttribute('data-remove-plato'));
+      pintarResumen();
+      return;
+    }
+
+    if (btnSumar) {
+      agregarPlato(
+        btnSumar.getAttribute('data-add-resumen'),
+        btnSumar.getAttribute('data-nombre'),
+        parseFloat(btnSumar.getAttribute('data-precio')),
+        btnSumar.getAttribute('data-img')
+      );
+
+      pintarResumen();
+      return;
+    }
+
+    if (btnEliminar) {
+      eliminarPlatoCompleto(btnEliminar.getAttribute('data-delete-plato'));
+      pintarResumen();
+    }
   });
 
   document.getElementById('btn-volver-rest').addEventListener('click', function () {
@@ -241,27 +314,19 @@
 
   document.getElementById('btn-seguir-comprando').addEventListener('click', function () {
     if (restauranteActual) abrirMenu(restauranteActual);
-    else mostrarSoloPanel(elStepRest);
   });
 
   document.getElementById('btn-comprar').addEventListener('click', function () {
     if (pedido.length === 0) {
-      alert('Añada al menos un plato antes de confirmar.');
+      alert('Añade al menos un producto.');
       return;
     }
-    var nombreRest = '';
-    for (var i = 0; i < RESTAURANTES.length; i++) {
-      if (RESTAURANTES[i].id === restauranteActual) {
-        nombreRest = RESTAURANTES[i].nombre;
-        break;
-      }
-    }
+
     elMsgConfirm.textContent =
-      'Su pedido en ' +
-      nombreRest +
-      ' por ' +
+      'Tu pedido ha sido enviado por ' +
       formatEuros(totalPedido()) +
-      ' está en preparación. Tiempo aproximado: 35 minutos.';
+      '. Tiempo estimado: 35 minutos.';
+
     pedido = [];
     pintarResumen();
     mostrarSoloPanel(elStepConf);
